@@ -3,13 +3,14 @@ import glob
 import pandas as pd
 import re
 
-DB_DIRECTORY = r"normalized_benchmark\**\*.off"
-SAVE_PATH = "database/raw_db.csv"
-LOAD_PATH = "database/raw_db.csv"
+DB_DIRECTORY = r"full_normalized_benchmark\**\*.off"
+SAVE_PATH = "database/normalized_db.csv"
+LOAD_PATH = "database/normalized_db.csv"
 
 def atoi(text):
     return int(text) if text.isdigit() else text
 
+def natural_keys(text):
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
 def dir_to_sorted_file_list():
@@ -33,7 +34,7 @@ def create_data(mesh_files):
         water_tight   =  int(mesh.is_watertight)
         df = df.append({"id":id,"class_id":class_id,"amnt_vertices":amnt_vertices,"amnt_faces":amnt_faces,"is_triangle":is_triangle,"bounding_box":bounding_box,
                         "water_tight":water_tight},ignore_index=True)
-        if i == 100:  pass          
+        if i %100 ==0 :  print(i)         
             # break
     return df
 

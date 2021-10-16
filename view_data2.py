@@ -34,52 +34,53 @@ def operate_mesh(index,subdivide=0,decimate=0,inp_mesh=None):
 
 def view_mesh(mesh):        
     pyrend_mesh = pyrender.Mesh.from_trimesh(mesh)
-    box_minimum = pyrender.Mesh.from_trimesh(mesh.bounding_box_oriented) 
-    box_aabb = pyrender.Mesh.from_trimesh(mesh.bounding_box) #this is also object oriented bounding box after rotation! 
+    box2 = pyrender.Mesh.from_trimesh(mesh.bounding_box_oriented) 
     scene = pyrender.Scene()
     scene.add(pyrend_mesh)
-    box_unit = trimesh.load("unit_cube.off",force="mesh")
-    box_unit = pyrender.Mesh.from_trimesh(box_unit)
-    # scene.add(box_unit)
-    # scene.add(box_aabb) #activate this one
-
+    box = trimesh.load("unit_cube.off",force="mesh")
+    box = pyrender.Mesh.from_trimesh(box)
+    scene.add(box)
+    scene.add(box2)
     # scene.add(pyrend_mesh)
     pyrender.Viewer(scene, use_raymond_lighting=True,render_flags={"all_wireframe":True,"all_solid":True})
 
 # goal range vertices between 700 and 2450
 def generate_normalized_db():
     df = pd.DataFrame(columns=["id","water_tight"])
-    for i,mesh_file in enumerate(mesh_files):    
+    for i,mesh_file in enumerate(mesh_files):   
+        if i > 1572: 
  
-        save_folder = '/'.join(mesh_file.replace("benchmark","normalized_benchmark").split('\\')[:4])
-        save_name = '/'.join(mesh_file.replace("benchmark","normalized_benchmark").split('\\')[4:])
-        try: os.makedirs(save_folder) 
-        except: pass #file already exists
+            save_folder = '/'.join(mesh_file.replace("benchmark","normalized2_benchmark").split('\\')[:4])
+            save_name = '/'.join(mesh_file.replace("benchmark","normalized2_benchmark").split('\\')[4:])
+            try: os.makedirs(save_folder) 
+            except: pass #file already exists
 
-        mesh = trimesh.load(mesh_file,force='mesh')
-        amnt_vertices = len(mesh.vertices)
-        amnt_faces = len(mesh.faces)
-        if amnt_vertices < 900: # vertices * 3.5 = vertices after 1 subdivide 
-            n = round(math.log(1000/amnt_vertices,3))
-            mesh = operate_mesh(index=i,subdivide=n)
+            mesh = trimesh.load(mesh_file,force='mesh')
             amnt_vertices = len(mesh.vertices)
             amnt_faces = len(mesh.faces)
+            if amnt_vertices < 1500: # vertices * 3.5 = vertices after 1 subdivide 
+                n = round(math.log(2000/amnt_vertices,3))
+                mesh = operate_mesh(index=i,subdivide=n)
+                amnt_vertices = len(mesh.vertices)
+                amnt_faces = len(mesh.faces)
 
-        if amnt_vertices > 1250:
-            # values now range between 850 vertices and 1250 because of decimation 
-            mesh=operate_mesh(index=i,decimate=1850,inp_mesh=mesh) #vertices = approximately  faces/1.85
-        df = df.append({"id":i,"water_tight":int(mesh.is_watertight)},ignore_index=True)
-        
-        # view_mesh(mesh)
-        mesh.export(f"{save_folder}/{save_name}",file_type="off")
-        
-        if i%50 == 0 and i >0: 
-            print(i)
-         
+            if amnt_vertices >= 2000:
+                # values now range between 850 vertices and 1250 because of decimation 
+                mesh=operate_mesh(index=i,decimate=3750,inp_mesh=mesh) #vertices = approximately  faces/1.85
+            df = df.append({"id":i,"water_tight":int(mesh.is_watertight)},ignore_index=True)
+            
+            # view_mesh(mesh)
+            mesh.export(f"{save_folder}/{save_name}",file_type="off")
+            
+            if i%50 == 0 and i >0: 
+                print(i)
+            
     df.to_csv(SAVE_PATH,index=False)
 
 import open3d as o3d
 import copy
+if __name__=="__main__":
+    generate_normalized_db()
 # mesh = trimesh.load("m671.off",force="mesh")
 # view_mesh(mesh)
 # if __name__=="__main__":

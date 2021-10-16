@@ -9,17 +9,25 @@ def stats_to_fig(df,column_stat,param):
     calculates statistics for dataframe
     params: amnt_vertices, amnt_faces
     '''      
+    
+    df = df[df["amnt_vertices"]<5500]
     data = df[param]
     sorted_vertices = np.sort(data)
-    bins = np.arange(np.max(data))[::2000]  #steps on x axis
+    bins = np.arange(np.max(data))[::500]  #steps on x axis
+    print(np.max(data))
+
     fig,ax = plt.subplots(figsize=(15,7))
     ax.hist(sorted_vertices,bins=bins)
     ax.set_xticks(bins)
+    # ax.set
+    ax.xaxis.set_tick_params(labelsize=20)
+    ax.yaxis.set_tick_params(labelsize=20)
+    
 
     # set title and labels
-    ax.set_title(column_stat)
-    ax.set_xlabel(f"number of {column_stat.split('_')[2]}")
-    ax.set_ylabel("count meshes")
+    ax.set_title(column_stat,fontsize=20)
+    ax.set_xlabel(f"number of {column_stat.split('_')[2]}",fontsize=20)
+    ax.set_ylabel("count meshes",fontsize=20)
 
     # save figure
     plt.savefig(f"stats/{column_stat}")
@@ -42,8 +50,8 @@ def get_outliers(df,column_stat="amnt_vertices"):
 def main():
     df = load_dataset()
     # raw database
-    # stats_to_fig(df,"raw_amnt_vertices","amnt_vertices")
-    stats_to_fig(df,"raw_amnt_faces","amnt_faces")
+    stats_to_fig(df,"normalized_amnt_vertices","amnt_vertices")
+    # stats_to_fig(df,"raw_amnt_faces","amnt_faces")
 
     df = load_dataset(load=LOAD_PATH)
     # processed database
@@ -51,11 +59,16 @@ def main():
     # stats_to_fig(df,"normalized_amnt_vertices","amnt_vertices")
     # stats_to_fig(df,"normalized_amnt_faces","amnt_faces")
 
-LOAD_PATH="database/normalized_db.csv"
+# LOAD_PATH="database/normalized_db.csv"
 if __name__ == "__main__":
     main()
+    # df = load_dataset()
+    # print(df["amnt_faces"].max())
+    # print(df[df["amnt_vertices"]>75000])
 
-    df = load_dataset(load = LOAD_PATH)
-    print(df[df["amnt_vertices"]>2000])
+    # df = load_dataset(load = LOAD_PATH)
+    # print(df[(df["amnt_vertices"]<577) ])
+
+    # print(df[df["amnt_vertices"]>3882])
     # print(get_outliers(df,"amnt_faces"))
 

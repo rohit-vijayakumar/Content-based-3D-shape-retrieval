@@ -1,0 +1,16 @@
+#virtual environment
+https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/
+
+# assignment of course
+https://webspace.science.uu.nl/~telea001/MR/Assignment
+
+# how .off file works
+https://shape.cs.princeton.edu/benchmark/documentation/off_format.html 
+
+
+set-executionpolicy remotesigned
+.\env\Scripts\activate
+
+.\env\Scripts\deactivate
+
+trimesh -> pip install trimesh[all]
