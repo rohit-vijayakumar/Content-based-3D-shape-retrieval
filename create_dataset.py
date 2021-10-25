@@ -39,7 +39,7 @@ def create_data(mesh_files):
     return df
 
 def load_dataset(load=LOAD_PATH):
-    print(f"opened dataset from {load}")
+    #print(f"opened dataset from {load}")
     df = pd.read_csv(load)
     return df
 
