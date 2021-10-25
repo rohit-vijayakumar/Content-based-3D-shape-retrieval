@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import math
 import os
+import matplotlib.mlab as mlab
+import seaborn as sns
 import skeletor as sk
 from view_data import view_mesh
 import copy
@@ -300,8 +302,10 @@ def stats_to_fig(data,column_stat):
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
     features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
+    plt.figure(figsize=(10,5))
+    fig, axs = plt.subplots(5)
     for i,mesh_file in enumerate(mesh_files):
-    	print(i, end='\r')  
+    	#print(i, end='\r')  
     	features = []
     	if(i !=100000):
          
@@ -379,7 +383,7 @@ if __name__=="__main__":
 
             
             # RECTENGULARITY  
-            volume =   mesh.bounding_box.volume        
+            volume =   pc_mesh.volume        
             #print("boundbox_volume",volume)
             features.append(volume)
 
@@ -390,7 +394,7 @@ if __name__=="__main__":
                   
 
             # Eccentricity 
-            eccentricity  = abs(mesh.principal_inertia_components[0] - mesh.principal_inertia_components[2])
+            eccentricity  = abs(mesh.principal_inertia_components[0] / mesh.principal_inertia_components[2])
             #eccentricity  = mesh.principal_inertia_vectors[0]/mesh.principal_inertia_components[2]
             features.append(eccentricity)
             
@@ -406,7 +410,7 @@ if __name__=="__main__":
             # A3 angle between 3 random vertices
             v_bary = mesh.centroid
             c = 0
-            for i in range (50000):
+            for j in range (50000):
                 n1 = random.randint(0,len(mesh.vertices)-1)
                 n2 = random.randint(0,len(mesh.vertices)-1)
                 n3 = random.randint(0,len(mesh.vertices)-1)
@@ -418,7 +422,7 @@ if __name__=="__main__":
                 a.append(n3)
                 a.append(n4)
                 if(len(np.unique(a))!=len(a)):
-                	i-=1
+                	j-=1
                 	continue
                 v1 = mesh.vertices[n1] 
                 v2 = mesh.vertices[n2] 
@@ -433,13 +437,16 @@ if __name__=="__main__":
                 norm_v1 = np.linalg.norm(vec1)
                 norm_v2 = np.linalg.norm(vec2)
                 if ((norm_v1* norm_v2) ==0 ):
-                	i-=1
+                	j-=1
                 	continue
                 # 	print(norm_v1, norm_v2)
                 # 	print("Division by 0")
-                angle = (np.rad2deg( np.arccos( np.dot(vec1,vec2) / (norm_v1* norm_v2) )))
+                if math.isnan(np.dot(vec1,vec2) / (norm_v1* norm_v2) ):
+                	j-=1
+                	continue
+                angle = (np.rad2deg(np.arccos( np.dot(vec1,vec2) / (norm_v1* norm_v2) )))
                 if math.isnan(angle):
-                	i-=1
+                	j-=1
                 	continue
                 A3.append(angle)
 
@@ -473,11 +480,31 @@ if __name__=="__main__":
                 #print("D4", cube_root)
 
             #print(D1)
-            A3_descriptor, _ = np.histogram(A3,bins=8)
-            D1_descriptor, _ = np.histogram(D1,bins=8)
-            D2_descriptor, _ = np.histogram(D2,bins=8)
-            D3_descriptor, _ = np.histogram(D3,bins=8)
-            D4_descriptor, _ = np.histogram(D4,bins=8)
+            A3_descriptor, x = np.histogram(A3,bins=8)
+            bin_centers = np.arange(1,9)
+            axs[0].plot(bin_centers, A3_descriptor)
+            axs[0].set_xticks(np.arange(1,9))
+
+
+            D1_descriptor, x = np.histogram(D1,bins=8)
+            bin_centers = np.arange(1,9)
+            axs[1].plot(bin_centers, D1_descriptor)
+            axs[1].set_xticks(np.arange(1,9))
+
+            D2_descriptor, x = np.histogram(D2,bins=8)
+            bin_centers = np.arange(1,9)
+            axs[2].plot(bin_centers, D2_descriptor)
+            axs[2].set_xticks(np.arange(1,9))
+
+            D3_descriptor, x = np.histogram(D3,bins=8)
+            bin_centers = np.arange(1,9)
+            axs[3].plot(bin_centers, D3_descriptor)
+            axs[3].set_xticks(np.arange(1,9))
+
+            D4_descriptor, x = np.histogram(D4,bins=8)
+            bin_centers = np.arange(1,9)
+            axs[4].plot(bin_centers, D4_descriptor)
+            axs[4].set_xticks(np.arange(1,9))
 
             features.append(A3_descriptor)
             features.append(D1_descriptor)
@@ -488,6 +515,9 @@ if __name__=="__main__":
             # print(len(features_df.columns))
             features_df.loc[len(features_df)] = features
             features_df.to_csv (r'features_df.csv', index = False, header=True)
+            if(i==2):
+            	plt.savefig('shape_descriptors.png')
+            	plt.show()
             #features_df = features_df.append(pd.DataFrame(features))
             #print(A3_descriptor, D1_descriptor,D2_descriptor, D3_descriptor, D4_descriptor)
              
