@@ -302,7 +302,7 @@ def stats_to_fig(data,column_stat):
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
     features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
-    plt.figure(figsize=(10,5))
+    plt.figure(figsize=(5,10))
     fig, axs = plt.subplots(5)
     for i,mesh_file in enumerate(mesh_files):
     	#print(i, end='\r')  
@@ -484,27 +484,32 @@ if __name__=="__main__":
             bin_centers = np.arange(1,9)
             axs[0].plot(bin_centers, A3_descriptor)
             axs[0].set_xticks(np.arange(1,9))
+            axs[0].set_yticks(np.arange(0,16000,2000))
 
 
             D1_descriptor, x = np.histogram(D1,bins=8)
             bin_centers = np.arange(1,9)
             axs[1].plot(bin_centers, D1_descriptor)
             axs[1].set_xticks(np.arange(1,9))
+            axs[1].set_yticks(np.arange(0,16000,2000))
 
             D2_descriptor, x = np.histogram(D2,bins=8)
             bin_centers = np.arange(1,9)
             axs[2].plot(bin_centers, D2_descriptor)
             axs[2].set_xticks(np.arange(1,9))
+            axs[2].set_yticks(np.arange(0,16000,2000))
 
             D3_descriptor, x = np.histogram(D3,bins=8)
             bin_centers = np.arange(1,9)
             axs[3].plot(bin_centers, D3_descriptor)
             axs[3].set_xticks(np.arange(1,9))
+            axs[3].set_yticks(np.arange(0,16000,2000))
 
             D4_descriptor, x = np.histogram(D4,bins=8)
             bin_centers = np.arange(1,9)
             axs[4].plot(bin_centers, D4_descriptor)
             axs[4].set_xticks(np.arange(1,9))
+            axs[4].set_yticks(np.arange(0,16000,2000))
 
             features.append(A3_descriptor)
             features.append(D1_descriptor)
@@ -515,6 +520,8 @@ if __name__=="__main__":
             # print(len(features_df.columns))
             features_df.loc[len(features_df)] = features
             features_df.to_csv (r'features_df.csv', index = False, header=True)
+            fig.tight_layout(pad=2.0)
+            print(i)
             if(i==2):
             	plt.savefig('shape_descriptors.png')
             	plt.show()
