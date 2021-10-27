@@ -302,12 +302,12 @@ def stats_to_fig(data,column_stat):
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
     features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
-    #plt.figure(figsize=(5,7))
-    #fig, axs = plt.subplots(5)
+    
+    fig, axs = plt.subplots(5, figsize=(5,10))
     for i,mesh_file in enumerate(mesh_files):
     	print(i, end='\r')  
     	features = []
-    	if(i !=100000):
+    	if(i !=1000000):
          
             mesh = trimesh.load(mesh_file,force='mesh')
             #view_mesh(mesh)
@@ -334,8 +334,8 @@ if __name__=="__main__":
             
             #data = discrete_mean_curvature_measure(mesh,mesh.vertices,0.1)
             # print(min(data),max(data))
-            local_weight = 1
-            global_weight = 0.8
+            local_weight = 0
+            global_weight = 1
             scaler = MinMaxScaler()
             norm_data = np.array(local_weight*data - global_weight*data).reshape(-1,1)
             #print(norm_data.shape)
@@ -436,7 +436,7 @@ if __name__=="__main__":
 
                 norm_v1 = np.linalg.norm(vec1)
                 norm_v2 = np.linalg.norm(vec2)
-                if ((norm_v1* norm_v2) ==0 ):
+                if ((norm_v1* norm_v2) ==0):
                 	j-=1
                 	continue
                 # 	print(norm_v1, norm_v2)
@@ -456,7 +456,6 @@ if __name__=="__main__":
                 distance = np.linalg.norm(v1-v_bary)
                 D1.append(distance)
                 #print("D1", distance)
-
                 # D2 distance
                 distance_2 = np.linalg.norm(v1-v2)
                 D2.append(distance_2)
@@ -465,7 +464,7 @@ if __name__=="__main__":
                 # Area 3 vertices
                 crosses = np.array([np.cross(vec1,vec2)])
                 area = (np.sum(crosses**2, axis=1)**.5) * .5
-                distance_3 = np.sum(area)
+                distance_3 = min(np.sum(area), 0.1)
                 D3.append(distance_3)
                 #print("D3", distance_3)      
                 # print(i,distance_3)   
@@ -483,33 +482,37 @@ if __name__=="__main__":
             A3_descriptor, x = np.histogram(A3,bins=8)
             # bin_centers = np.arange(1,9)
             # axs[0].plot(bin_centers, A3_descriptor)
+            # axs[0].set_title("A3 shape descriptor")
             # axs[0].set_xticks(np.arange(1,9))
-            # axs[0].set_yticks(np.arange(0,16000,2000))
+            # axs[0].set_yticks(np.arange(0,16000,5000))
 
 
             D1_descriptor, x = np.histogram(D1,bins=8)
             # bin_centers = np.arange(1,9)
             # axs[1].plot(bin_centers, D1_descriptor)
+            # axs[1].set_title("D1 shape descriptor")
             # axs[1].set_xticks(np.arange(1,9))
-            # axs[1].set_yticks(np.arange(0,16000,2000))
+            # axs[1].set_yticks(np.arange(0,31000,10000))
 
             D2_descriptor, x = np.histogram(D2,bins=8)
             # bin_centers = np.arange(1,9)
             # axs[2].plot(bin_centers, D2_descriptor)
+            # axs[2].set_title("D2 shape descriptor")
             # axs[2].set_xticks(np.arange(1,9))
-            # axs[2].set_yticks(np.arange(0,16000,2000))
+            # axs[2].set_yticks(np.arange(0,31000,10000))
 
             D3_descriptor, x = np.histogram(D3,bins=8)
             # bin_centers = np.arange(1,9)
             # axs[3].plot(bin_centers, D3_descriptor)
-            # axs[3].set_xticks(np.arange(1,9))
-            # axs[3].set_yticks(np.arange(0,16000,2000))
+            # axs[3].set_title("D3 shape descriptor")
+            # axs[3].set_yticks(np.arange(0,31000,10000))
 
             D4_descriptor, x = np.histogram(D4,bins=8)
             # bin_centers = np.arange(1,9)
             # axs[4].plot(bin_centers, D4_descriptor)
+            # axs[4].set_title("D4 shape descriptor")
             # axs[4].set_xticks(np.arange(1,9))
-            # axs[4].set_yticks(np.arange(0,16000,2000))
+            # axs[4].set_yticks(np.arange(0,31000,10000))
 
             features.append(A3_descriptor)
             features.append(D1_descriptor)
@@ -519,11 +522,11 @@ if __name__=="__main__":
             # print(len(features))
             # print(len(features_df.columns))
             features_df.loc[len(features_df)] = features
-            features_df.to_csv (r'features_df.csv', index = False, header=True)
-            # fig.tight_layout(pad=2.0)
+            features_df.to_csv (r'features_final_df.csv', index = False, header=True)
+            fig.tight_layout(pad=1.2)
             # #print(i)
-            # if(i==2):
-            # 	plt.savefig('shape_descriptors.png')
+            # if(i==1310):
+            # 	plt.savefig('helicopter_descriptors.png')
             # 	plt.show()
             #features_df = features_df.append(pd.DataFrame(features))
             #print(A3_descriptor, D1_descriptor,D2_descriptor, D3_descriptor, D4_descriptor)
