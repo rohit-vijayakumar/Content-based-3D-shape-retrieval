@@ -299,21 +299,44 @@ def stats_to_fig(data,column_stat):
     # save figure
     plt.savefig(f"stats/feature_extraction/{column_stat}")
 
+def standardize(data):
+    data_mean = np.mean(data)    
+    data_std = np.std(data)
+    normalized_data = (data - data_mean)/data_std
+    return normalized_data
+
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
-    features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
-    
-    fig, axs = plt.subplots(6, figsize=(5,10))
-    fig.suptitle("Humanoid shape descriptors", fontsize=16)
+    #features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
+    data = pd.read_csv('fixed_features_df.csv')  
+    data_normalized = data.copy()
+
+    # bounding_volume = data['volume']/data['rectangulairty']
+
+    # for column in data.columns[4:]:
+    #     if (column =='volume'):
+    #         threshold = list(data[column].quantile([0.05]))[0]
+    #         thresholded_data['volume'][thresholded_data[column]<threshold] = threshold
+
+    # thresholded_data['compactness'] = (thresholded_data['surface_area']**3)/ (36* np.pi*(thresholded_data['volume']**2))
+    # thresholded_data['sphericity'] = 1/thresholded_data['compactness']
+    # thresholded_data['rectangulairty'] = thresholded_data['volume'] / bounding_volumefor column in data.columns[4:]:
+    for column in data.columns[1:8]:
+        normalized_feature_data = standardize(data[column])
+        data_normalized[column] = normalized_feature_data
+
+    data_normalized.to_csv (r'normalized_features_df.csv', index = False, header=True)
+    print(1/0)
+    #fig, axs = plt.subplots(6, figsize=(5,10))
+    #fig.suptitle("Humanoid shape descriptors", fontsize=16)
     #ids = []
     for i,mesh_file in enumerate(mesh_files):
     	print(i, end='\r')  
     	features = []
-    	if(i >= 1691 and i<=1691):
+    	if(i != 1000000):
          
             mesh = trimesh.load(mesh_file,force='mesh')
-            view_mesh(mesh)
-
+            # view_mesh(mesh)
             # continue
             
             #fixed = sk.pre.fix_mesh(mesh, remove_disconnected=0, inplace=False)
@@ -328,9 +351,9 @@ if __name__=="__main__":
             #     view_mesh(mesh)
             
             # VOLUME
-            print(mesh.is_watertight)
+            #print(mesh.is_watertight)
 
-            #PointCloud(mesh.vertices, colors=None).show()
+            #PointCloud(mesh.vertices, colors=None).show()S
             # print(points)
             #view_mesh(mesh)
 
@@ -373,8 +396,6 @@ if __name__=="__main__":
             
             pc_mesh = PointCloud(mesh.vertices).convex_hull
 
-            pc_mesh.show()
-            
             diameter = np.max(pc_mesh.bounds[1]-pc_mesh.bounds[0])
             #diameter = np.sum((pc_mesh.bounds[1]-pc_mesh.bounds[0])**2)
             #print(diameter)
@@ -390,14 +411,13 @@ if __name__=="__main__":
             sphericity = 1/compactness
             features.append(compactness)
             features.append(sphericity)
-            print("compactness",compactness)
+            #print("compactness",compactness)
             #print("sphericity",sphericity)
 
             
             # RECTENGULARITY  
-            volume =   pc_mesh.volume   
-            print("boundbox_volume",volume)
-            continue
+            volume =   pc_mesh.volume        
+            #print("boundbox_volume",volume)
             features.append(volume)
 
             features.append(diameter)
@@ -493,7 +513,7 @@ if __name__=="__main__":
 
             #print(D1)
             A3_descriptor, x = np.histogram(A3,bins=8)
-            bin_centers = np.arange(1,9)
+            # bin_centers = np.arange(1,9)
             # axs[0].plot(bin_centers, A3_descriptor)
             # axs[0].set_title("A3")
             # axs[0].set_xticks(np.arange(1,9))
@@ -542,14 +562,14 @@ if __name__=="__main__":
             # print(len(features))
             # print(len(features_df.columns))
             features_df.loc[len(features_df)] = features
-            #features_df.to_csv (r'features_corrected_df.csv', index = False, header=True)
+            features_df.to_csv (r'features_corrected_df.csv', index = False, header=True)
             fig.tight_layout(pad=1.2)
             #ids.append(str(i))
             #print(i)
-            if(i==1311):
-            	#axs[1].legend(ids, loc='upper right')
-            	#plt.savefig('humanoid_descriptors_221_250.png')
-            	plt.show()
+            # if(i==250):
+            # 	#axs[1].legend(ids, loc='upper right')
+            # 	plt.savefig('humanoid_descriptors_221_250.png')
+            # 	plt.show()
             #features_df = features_df.append(pd.DataFrame(features))
             #print(A3_descriptor, D1_descriptor,D2_descriptor, D3_descriptor, D4_descriptor)
              
