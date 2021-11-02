@@ -308,24 +308,29 @@ def standardize(data):
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
     #features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
-    data = pd.read_csv('fixed_features_df.csv')  
+    data = pd.read_csv('features_corrected_df.csv')  
+    thresholded_data = data.copy()
+
+    bounding_volume = data['volume']/data['rectangulairty']
+
+    for column in data.columns[4:]:
+        if (column =='volume'):
+            threshold = list(data[column].quantile([0.05]))[0]
+            print(threshold)
+            thresholded_data['volume'][thresholded_data[column]<threshold] = threshold
+
+    thresholded_data['compactness'] = (thresholded_data['surface_area']**3)/ (36* np.pi*(thresholded_data['volume']**2))
+    thresholded_data['sphericity'] = 1/thresholded_data['compactness']
+    thresholded_data['rectangulairty'] = thresholded_data['volume'] / bounding_volume
+
     data_normalized = data.copy()
-
-    # bounding_volume = data['volume']/data['rectangulairty']
-
-    # for column in data.columns[4:]:
-    #     if (column =='volume'):
-    #         threshold = list(data[column].quantile([0.05]))[0]
-    #         thresholded_data['volume'][thresholded_data[column]<threshold] = threshold
-
-    # thresholded_data['compactness'] = (thresholded_data['surface_area']**3)/ (36* np.pi*(thresholded_data['volume']**2))
-    # thresholded_data['sphericity'] = 1/thresholded_data['compactness']
-    # thresholded_data['rectangulairty'] = thresholded_data['volume'] / bounding_volumefor column in data.columns[4:]:
-    for column in data.columns[1:8]:
-        normalized_feature_data = standardize(data[column])
+    for column in thresholded_data.columns[1:8]:
+        normalized_feature_data = standardize(thresholded_data[column])
         data_normalized[column] = normalized_feature_data
 
-    data_normalized.to_csv (r'normalized_features_df.csv', index = False, header=True)
+    data_normalized['diameter'] = 1.0
+
+    #data_normalized.to_csv (r'normalized_singular_features_df.csv', index = False, header=True)
     print(1/0)
     #fig, axs = plt.subplots(6, figsize=(5,10))
     #fig.suptitle("Humanoid shape descriptors", fontsize=16)
