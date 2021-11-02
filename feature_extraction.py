@@ -301,7 +301,7 @@ def stats_to_fig(data,column_stat):
 
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
-    features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
+    features_df = pd.DataFrame(columns = ['id','surface_area','volume','compactness','sphericity','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
     
     #fig, axs = plt.subplots(6, figsize=(5,10))
     #fig.suptitle("Humanoid shape descriptors", fontsize=16)

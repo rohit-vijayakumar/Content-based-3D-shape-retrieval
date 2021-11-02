@@ -299,49 +299,30 @@ def stats_to_fig(data,column_stat):
     # save figure
     plt.savefig(f"stats/feature_extraction/{column_stat}")
 
-def standardize(data):
-    data_mean = np.mean(data)    
-    data_std = np.std(data)
+def standardize(data, f):
+    mean_std = np.load('mean_std.npy')
+    data_mean = mean_std[f][0]  
+    data_std = mean_std[f][1]  
     normalized_data = (data - data_mean)/data_std
-    return normalized_data
+    f +=1
+    return normalized_data, f
 
 if __name__=="__main__":
     #before this also rescale mesh with vertices and faces then we can normalize a query object towards same as database objects!
-    #features_df = pd.DataFrame(columns = ['id','surface_area', 'compactness','sphericity','volume','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
-    data = pd.read_csv('features_corrected_df.csv')  
-    thresholded_data = data.copy()
-
-    bounding_volume = data['volume']/data['rectangulairty']
-
-    for column in data.columns[4:]:
-        if (column =='volume'):
-            threshold = list(data[column].quantile([0.05]))[0]
-            print(threshold)
-            thresholded_data['volume'][thresholded_data[column]<threshold] = threshold
-
-    thresholded_data['compactness'] = (thresholded_data['surface_area']**3)/ (36* np.pi*(thresholded_data['volume']**2))
-    thresholded_data['sphericity'] = 1/thresholded_data['compactness']
-    thresholded_data['rectangulairty'] = thresholded_data['volume'] / bounding_volume
-
-    data_normalized = data.copy()
-    for column in thresholded_data.columns[1:8]:
-        normalized_feature_data = standardize(thresholded_data[column])
-        data_normalized[column] = normalized_feature_data
-
-    data_normalized['diameter'] = 1.0
-
-    #data_normalized.to_csv (r'normalized_singular_features_df.csv', index = False, header=True)
-    print(1/0)
+    features_df = pd.DataFrame(columns = ['id','surface_area','volume','compactness','sphericity','diameter','rectangulairty','eccentricity','curvature', 'A3', 'D1', 'D2', 'D3', 'D4'])
+    
     #fig, axs = plt.subplots(6, figsize=(5,10))
     #fig.suptitle("Humanoid shape descriptors", fontsize=16)
     #ids = []
+    mean_std = np.load('mean_std.npy')
     for i,mesh_file in enumerate(mesh_files):
-    	print(i, end='\r')  
-    	features = []
-    	if(i != 1000000):
-         
+        print(i, end='\r')  
+        features = []
+        if(i == 221):
+            f = 0
             mesh = trimesh.load(mesh_file,force='mesh')
-            # view_mesh(mesh)
+            #view_mesh(mesh)
+
             # continue
             
             #fixed = sk.pre.fix_mesh(mesh, remove_disconnected=0, inplace=False)
@@ -358,7 +339,7 @@ if __name__=="__main__":
             # VOLUME
             #print(mesh.is_watertight)
 
-            #PointCloud(mesh.vertices, colors=None).show()S
+            #PointCloud(mesh.vertices, colors=None).show()
             # print(points)
             #view_mesh(mesh)
 
@@ -380,7 +361,7 @@ if __name__=="__main__":
             norm = matplotlib.colors.Normalize(vmin=(local_weight*min(data))-(global_weight*40), vmax=(local_weight*max(data))+ (global_weight*30), clip=True)
             #norm = matplotlib.colors.Normalize(vmin=1.0*min(data)-(40*1.0), vmax=1.0*max(data)+ (30*1.0), clip=True)
             #norm2 = matplotlib.colors.Normalize(vmin=-30, vmax=40, clip=True)
-       		
+            
             mapper = cm.ScalarMappable(norm=norm, cmap=cm.turbo)
 
             node_color = [(r, g, b) for r, g, b, a in mapper.to_rgba(data)]
@@ -401,6 +382,8 @@ if __name__=="__main__":
             
             pc_mesh = PointCloud(mesh.vertices).convex_hull
 
+            #pc_mesh.show()
+            
             diameter = np.max(pc_mesh.bounds[1]-pc_mesh.bounds[0])
             #diameter = np.sum((pc_mesh.bounds[1]-pc_mesh.bounds[0])**2)
             #print(diameter)
@@ -409,35 +392,49 @@ if __name__=="__main__":
             # AREA
             #print("Area",mesh.area)
             features.append(i)
-            features.append(mesh.area)
+            normalized_area, f = standardize(mesh.area,f)
 
-            # Compactness
-            compactness = (pc_mesh.area**3)/ (36* np.pi*(pc_mesh.volume**2))
-            sphericity = 1/compactness
-            features.append(compactness)
-            features.append(sphericity)
+            features.append(normalized_area)
+            
             #print("compactness",compactness)
             #print("sphericity",sphericity)
 
             
             # RECTENGULARITY  
-            volume =   pc_mesh.volume        
+            volume =  pc_mesh.volume
+            thresh = 0.00823
+            if (volume < thresh):
+                volume = thresh
             #print("boundbox_volume",volume)
-            features.append(volume)
+            #continue
+            normalized_volume, f = standardize(volume, f)
+            features.append(normalized_volume)
+
+            compactness = (pc_mesh.area**3)/ (36* np.pi*(volume**2))
+            sphericity = 1/compactness
+
+            normalized_compactness, f = standardize(compactness, f)
+            features.append(normalized_compactness)
+            normalized_sphericity, f = standardize(sphericity, f)
+            features.append(normalized_sphericity)
 
             features.append(diameter)
-            rectangularity = pc_mesh.volume / mesh.bounding_box.volume
-            features.append(rectangularity)
+            f+=1
+            rectangularity = volume / mesh.bounding_box.volume
+            normalized_rectangularity, f = standardize(rectangularity, f)
+            features.append(normalized_rectangularity)
             #print("Rectangularity", rectangularity)
                   
 
             # Eccentricity 
             eccentricity  = abs(mesh.principal_inertia_components[0] / mesh.principal_inertia_components[2])
+            normalized_eccentricity, f = standardize(eccentricity, f)
             #eccentricity  = mesh.principal_inertia_vectors[0]/mesh.principal_inertia_components[2]
-            features.append(eccentricity)
+            features.append(normalized_eccentricity)
             
             #print(curvature)
-            features.append(curvature)
+            normalzied_curvature = curvature/np.sum(curvature)
+            features.append(normalzied_curvature)
             #print("Eccentricity", eccentricity)
             
             A3 = []
@@ -460,8 +457,8 @@ if __name__=="__main__":
                 a.append(n3)
                 a.append(n4)
                 if(len(np.unique(a))!=len(a)):
-                	j-=1
-                	continue
+                    j-=1
+                    continue
                 v1 = mesh.vertices[n1] 
                 v2 = mesh.vertices[n2] 
                 v3 = mesh.vertices[n3]
@@ -475,17 +472,17 @@ if __name__=="__main__":
                 norm_v1 = np.linalg.norm(vec1)
                 norm_v2 = np.linalg.norm(vec2)
                 if ((norm_v1* norm_v2) ==0):
-                	j-=1
-                	continue
-                # 	print(norm_v1, norm_v2)
-                # 	print("Division by 0")
+                    j-=1
+                    continue
+                #   print(norm_v1, norm_v2)
+                #   print("Division by 0")
                 if math.isnan(np.dot(vec1,vec2) / (norm_v1* norm_v2) ):
-                	j-=1
-                	continue
+                    j-=1
+                    continue
                 angle = (np.rad2deg(np.arccos( np.dot(vec1,vec2) / (norm_v1* norm_v2) )))
                 if math.isnan(angle):
-                	j-=1
-                	continue
+                    j-=1
+                    continue
                 A3.append(angle)
 
                 #print("Angle", angle)
@@ -518,7 +515,9 @@ if __name__=="__main__":
 
             #print(D1)
             A3_descriptor, x = np.histogram(A3,bins=8)
-            # bin_centers = np.arange(1,9)
+            normalzied_A3_descriptor = A3_descriptor/np.sum(A3_descriptor)
+            features.append(normalzied_A3_descriptor)
+            #bin_centers = np.arange(1,9)
             # axs[0].plot(bin_centers, A3_descriptor)
             # axs[0].set_title("A3")
             # axs[0].set_xticks(np.arange(1,9))
@@ -526,6 +525,8 @@ if __name__=="__main__":
 
 
             D1_descriptor, x = np.histogram(D1,bins=8)
+            normalzied_D1_descriptor = D1_descriptor/np.sum(D1_descriptor)
+            features.append(normalzied_D1_descriptor)            
             # bin_centers = np.arange(1,9)
             # axs[1].plot(bin_centers, D1_descriptor)
             # axs[1].set_title("D1")
@@ -534,6 +535,8 @@ if __name__=="__main__":
             
 
             D2_descriptor, x = np.histogram(D2,bins=8)
+            normalzied_D2_descriptor = D2_descriptor/np.sum(D2_descriptor)
+            features.append(normalzied_D2_descriptor)              
             # bin_centers = np.arange(1,9)
             # axs[2].plot(bin_centers, D2_descriptor)
             # axs[2].set_title("D2")
@@ -541,40 +544,50 @@ if __name__=="__main__":
             # axs[2].set_yticks(np.arange(0,21000,5000))
 
             D3_descriptor, x = np.histogram(D3,bins=8)
+            normalzied_D3_descriptor = D3_descriptor/np.sum(D3_descriptor)
+            features.append(normalzied_D3_descriptor)             
             # bin_centers = np.arange(1,9)
             # axs[3].plot(bin_centers, D3_descriptor)
             # axs[3].set_title("D3")
             # axs[3].set_yticks(np.arange(0,31000,10000))
 
             D4_descriptor, x = np.histogram(D4,bins=8)
+            normalzied_D4_descriptor = D4_descriptor/np.sum(D4_descriptor)
+            features.append(normalzied_D4_descriptor)             
             # bin_centers = np.arange(1,9)
             # axs[4].plot(bin_centers, D4_descriptor)
             # axs[4].set_title("D4")
             # axs[4].set_xticks(np.arange(1,9))
             # axs[4].set_yticks(np.arange(0,31000,10000))
 
-            bin_centers = np.arange(1,9)
+            #bin_centers = np.arange(1,9)
             # axs[5].plot(bin_centers, curvature)
             # axs[5].set_title("Curvature")
             # axs[5].set_xticks(np.arange(1,9))
             # axs[5].set_yticks(np.arange(0,1600,500))
 
-            features.append(A3_descriptor)
-            features.append(D1_descriptor)
-            features.append(D2_descriptor)
-            features.append(D3_descriptor)
-            features.append(D4_descriptor)
+            #features.append(normalzied_A3_descriptor)
+            #features.append(normalzied_D1_descriptor)
+            #features.append(normalzied_D2_descriptor)
+            #features.append(normalzied_D3_descriptor)
+            #features.append(normalzied_D4_descriptor)
+
+            print(features)
+
+
             # print(len(features))
             # print(len(features_df.columns))
             features_df.loc[len(features_df)] = features
-            features_df.to_csv (r'features_corrected_df.csv', index = False, header=True)
-            fig.tight_layout(pad=1.2)
+    features_df.to_pickle("example_221.pkl")
+
+    #features_df.to_csv (r'features_finally_corrected_df.csv', index = False, header=True)
+            #fig.tight_layout(pad=1.2)
             #ids.append(str(i))
             #print(i)
-            # if(i==250):
-            # 	#axs[1].legend(ids, loc='upper right')
-            # 	plt.savefig('humanoid_descriptors_221_250.png')
-            # 	plt.show()
+            #if(i==1311):
+                #axs[1].legend(ids, loc='upper right')
+                #plt.savefig('humanoid_descriptors_221_250.png')
+                #plt.show()
             #features_df = features_df.append(pd.DataFrame(features))
             #print(A3_descriptor, D1_descriptor,D2_descriptor, D3_descriptor, D4_descriptor)
              
