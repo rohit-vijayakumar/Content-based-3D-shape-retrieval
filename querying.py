@@ -318,7 +318,7 @@ if __name__=="__main__":
     for i,mesh_file in enumerate(mesh_files):
         print(i, end='\r')  
         features = []
-        if(i == 221):
+        if(i == 700):
             f = 0
             mesh = trimesh.load(mesh_file,force='mesh')
             #view_mesh(mesh)
@@ -572,13 +572,13 @@ if __name__=="__main__":
             #features.append(normalzied_D3_descriptor)
             #features.append(normalzied_D4_descriptor)
 
-            print(features)
+            #print(features)
 
 
             # print(len(features))
             # print(len(features_df.columns))
             features_df.loc[len(features_df)] = features
-    features_df.to_pickle("example_221.pkl")
+    features_df.to_pickle("example_700.pkl")
 
     #features_df.to_csv (r'features_finally_corrected_df.csv', index = False, header=True)
             #fig.tight_layout(pad=1.2)
