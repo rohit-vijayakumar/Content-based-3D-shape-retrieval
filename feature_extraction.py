@@ -309,12 +309,42 @@ if __name__=="__main__":
     for i,mesh_file in enumerate(mesh_files):
     	print(i, end='\r')  
     	features = []
-    	if(i != 1000000):
-         
+    	pred = [221,
+ 238,
+ 245,
+ 220,
+ 234,
+ 243,
+ 229,
+ 224,
+ 223,
+ 246,
+ 237,
+ 1290,
+ 1473,
+ 254,
+ 258,
+ 251,
+ 244,
+ 1307,
+ 230,
+ 665,
+ 239,
+ 1230,
+ 250,
+ 1190,
+ 1133,
+ 280,
+ 1474,
+ 1651,
+ 1315,
+ 61]
+    	if(i in pred):
+            print(i)
             mesh = trimesh.load(mesh_file,force='mesh')
-            #view_mesh(mesh)
+            view_mesh(mesh)
 
-            # continue
+            continue
             
             #fixed = sk.pre.fix_mesh(mesh, remove_disconnected=0, inplace=False)
             #skel = sk.skeletonize.by_wavefront(mesh, waves=3, step_size=1)
