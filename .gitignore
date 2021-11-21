@@ -1,5 +1,7 @@
 ### Project specific gitignore
-data/
+full_normalized_benchmark/
+database/
+stats/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
